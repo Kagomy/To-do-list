@@ -1,426 +1,394 @@
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mello App Clone</title>
+    <style>
+        /* ====== تنسيقات CSS ====== */
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-void main() async {
-  // ضروري عشان نستخدم SharedPreferences قبل تشغيل التطبيق
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MelloApp());
-}
+        body {
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s;
+        }
 
-class MelloApp extends StatefulWidget {
-  const MelloApp({super.key});
+        /* الحاوية الرئيسية */
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
 
-  @override
-  State<MelloApp> createState() => _MelloAppState();
-}
+        /* ====== شكل النافذة القديمة ====== */
+        .retro-window {
+            border: 2px solid #000;
+            background: white;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
 
-class _MelloAppState extends State<MelloApp> {
-  // اللون الافتراضي (أزرق فاتح زي Cinnamoroll)
-  Color _themeColor = const Color(0xFFC5CAE9); 
+        .window-header {
+            background: #e0e0e0;
+            padding: 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+        }
 
-  // قائمة الألوان المتاحة للمستخدم
-  final List<Color> _availableColors = const [
-    Color(0xFFC5CAE9), // أزرق Cinnamoroll
-    Color(0xFFE1BEE7), // بنفسجي Kuromi
-    Color(0xFFFFF9C4), // أصفر Gudetama
-    Color(0xFFF8BBD0), // وردي Melody
-    Color(0xFFB2DFDB), // أخضر فاتح
-    Color(0xFFFFCCBC), // برتقالي فاتح
-  ];
+        .window-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadThemeColor();
-  }
+        .window-dots {
+            display: flex;
+            gap: 5px;
+        }
 
-  // تحميل اللون المحفوظ من ذاكرة الجهاز
-  Future<void> _loadThemeColor() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedColorValue = prefs.getInt('themeColor');
-    if (savedColorValue != null) {
-      setState(() {
-        _themeColor = Color(savedColorValue);
-      });
-    }
-  }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
 
-  // حفظ اللون الجديد في ذاكرة الجهاز
-  Future<void> _changeThemeColor(Color newColor) async {
-    setState(() {
-      _themeColor = newColor;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('themeColor', newColor.value);
-  }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mello Clone',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFF9F9F9),
-        textTheme: GoogleFonts.quicksandTextTheme(Theme.of(context).textTheme),
-        primaryColor: _themeColor,
-      ),
-      home: HomeScreen(
-        themeColor: _themeColor,
-        availableColors: _availableColors,
-        onColorChanged: _changeThemeColor,
-      ),
-    );
-  }
-}
+        .window-content {
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+        }
 
-class HomeScreen extends StatefulWidget {
-  final Color themeColor;
-  final List<Color> availableColors;
-  final Function(Color) onColorChanged;
+        /* صورة البروفايل */
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: #C5CAE9;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            transition: background 0.3s;
+        }
 
-  const HomeScreen({
-    super.key,
-    required this.themeColor,
-    required this.availableColors,
-    required this.onColorChanged,
-  });
+        /* حقول البيانات */
+        .profile-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+        .field label {
+            font-size: 10px;
+            color: #777;
+            display: block;
+            margin-bottom: 2px;
+        }
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, dynamic>> _tasks = [];
+        .field input {
+            width: 100%;
+            padding: 5px 8px;
+            font-size: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #e8eaf6;
+            transition: background 0.3s;
+        }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
-  }
+        .row-fields {
+            display: flex;
+            gap: 8px;
+        }
 
-  // تحميل المهام من ذاكرة الجهاز
-  Future<void> _loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? tasksString = prefs.getString('tasks');
-    if (tasksString != null) {
-      setState(() {
-        _tasks = List<Map<String, dynamic>>.from(jsonDecode(tasksString));
-      });
-    }
-  }
+        .row-fields .field {
+            flex: 1;
+        }
 
-  // حفظ المهام في ذاكرة الجهاز
-  Future<void> _saveTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('tasks', jsonEncode(_tasks));
-  }
+        /* ====== قائمة المهام ====== */
+        .todo-section {
+            margin-top: 10px;
+        }
 
-  // إضافة مهمة جديدة
-  void _addTask(String title) {
-    if (title.isNotEmpty) {
-      setState(() {
-        _tasks.add({"title": title, "done": false});
-      });
-      _saveTasks();
-    }
-  }
+        .todo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
 
-  // حذف مهمة
-  void _deleteTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
-    _saveTasks();
-  }
+        .todo-header h2 {
+            font-size: 18px;
+            margin: 0;
+            color: #333;
+        }
 
-  // تغيير حالة المهمة (تم / لم يتم)
-  void _toggleTask(int index) {
-    setState(() {
-      _tasks[index]['done'] = !_tasks[index]['done'];
-    });
-    _saveTasks();
-  }
+        .add-btn {
+            background: #C5CAE9;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            color: #333;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
 
-  // نافذة إضافة مهمة جديدة
-  void _showAddTaskDialog() {
-    final TextEditingController controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: const Text("Add New Task", style: TextStyle(fontWeight: FontWeight.bold)),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: "What do you need to do?",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: widget.themeColor, width: 2),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: widget.themeColor),
-              onPressed: () {
-                _addTask(controller.text);
-                Navigator.pop(context);
-              },
-              child: const Text("Add", style: TextStyle(color: Colors.black87)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+        .add-btn:hover {
+            opacity: 0.8;
+        }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Mello App", style: GoogleFonts.quicksand(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          // زرار تغيير الألوان
-          IconButton(
-            icon: const Icon(Icons.color_lens_outlined),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return Container(
-                    padding: const EdgeInsets.all(20),
-                    height: 120,
-                    child: Column(
-                      children: [
-                        const Text("Choose Theme Color", style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: widget.availableColors.map((color) {
-                            return GestureDetector(
-                              onTap: () {
-                                widget.onColorChanged(color);
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.black12, width: 2),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // 1. بروفايل المستخدم
-            RetroProfileCard(themeColor: widget.themeColor),
-            const SizedBox(height: 25),
-            
-            // 2. قائمة المهام
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("My To-Do List", style: GoogleFonts.quicksand(fontSize: 20, fontWeight: FontWeight.bold)),
-                IconButton(
-                  icon: Icon(Icons.add_circle, color: widget.themeColor, size: 30),
-                  onPressed: _showAddTaskDialog,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            
-            // عرض المهام
-            _tasks.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Text(
-                        "No tasks yet. Add one!", 
-                        style: TextStyle(color: Colors.grey[600])
-                      ),
-                    ),
-                  )
-                : Column(
-                    children: List.generate(_tasks.length, (index) {
-                      final task = _tasks[index];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black12, offset: Offset(2, 2))
-                          ],
-                        ),
-                        child: ListTile(
-                          leading: Checkbox(
-                            value: task['done'],
-                            activeColor: widget.themeColor,
-                            onChanged: (bool? value) => _toggleTask(index),
-                          ),
-                          title: Text(
-                            task['title'],
-                            style: TextStyle(
-                              decoration: task['done'] ? TextDecoration.lineThrough : null,
-                              color: task['done'] ? Colors.grey : Colors.black87,
-                            ),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                            onPressed: () => _deleteTask(index),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+        /* قائمة المهام */
+        #task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-// ويدجت شكل البروفايل (النافذة القديمة)
-class RetroProfileCard extends StatelessWidget {
-  final Color themeColor;
-  const RetroProfileCard({super.key, required this.themeColor});
+        .task-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+        }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.black, width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, offset: Offset(4, 4), blurRadius: 0),
-        ],
-      ),
-      child: Column(
-        children: [
-          // شريط العنوان (Title Bar)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("_.exe", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Row(
-                  children: [
-                    _buildWindowButton(Colors.red[400]!),
-                    _buildWindowButton(Colors.yellow[400]!),
-                    _buildWindowButton(Colors.green[400]!),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // محتوى النافذة
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // مكان صورة البروفايل
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: themeColor.withOpacity(0.3), // اللون بيتغير حسب الثيم
-                    border: Border.all(color: Colors.black12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.person, size: 50, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .task-text.done {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff5f56;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        /* ====== نافذة تغيير الألوان ====== */
+        .color-picker-container {
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .color-picker-container p {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .color-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .color-circle:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 1. بروفايل المستخدم -->
+        <div class="retro-window">
+            <div class="window-header">
+                <span class="window-title">_.exe</span>
+                <div class="window-dots">
+                    <div class="dot red"></div>
+                    <div class="dot yellow"></div>
+                    <div class="dot green"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="avatar" id="avatar-box">👤</div>
+                <div class="profile-info">
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input type="text" id="fullname" value="Mello User">
+                    </div>
+                    <div class="row-fields">
+                        <div class="field">
+                            <label>Grade</label>
+                            <input type="text" id="grade" value="111">
+                        </div>
+                        <div class="field">
+                            <label>Birthday</label>
+                            <input type="text" id="birthday" value="July 19">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. قائمة المهام -->
+        <div class="todo-section">
+            <div class="todo-header">
+                <h2>My To-Do List</h2>
+                <button class="add-btn" onclick="addTask()">+</button>
+            </div>
+            <ul id="task-list">
+                <!-- المهام هتتضاف هنا عن طريق الجافاسكريبت -->
+            </ul>
+        </div>
+
+        <!-- 3. اختيار الألوان -->
+        <div class="color-picker-container">
+            <p>Choose Theme Color</p>
+            <div class="color-options">
+                <div class="color-circle" style="background: #C5CAE9;" onclick="changeColor('#C5CAE9')"></div>
+                <div class="color-circle" style="background: #E1BEE7;" onclick="changeColor('#E1BEE7')"></div>
+                <div class="color-circle" style="background: #FFF9C4;" onclick="changeColor('#FFF9C4')"></div>
+                <div class="color-circle" style="background: #F8BBD0;" onclick="changeColor('#F8BBD0')"></div>
+                <div class="color-circle" style="background: #B2DFDB;" onclick="changeColor('#B2DFDB')"></div>
+                <div class="color-circle" style="background: #FFCCBC;" onclick="changeColor('#FFCCBC')"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ====== كود JavaScript ======
+        
+        // مصفوفة المهام
+        let tasks = [];
+
+        // تحميل المهام واللون من ذاكرة المتصفح (localStorage)
+        window.onload = function() {
+            // تحميل اللون
+            const savedColor = localStorage.getItem('themeColor');
+            if (savedColor) {
+                changeColor(savedColor);
+            }
+
+            // تحميل المهام
+            const savedTasks = localStorage.getItem('tasks');
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+                renderTasks();
+            } else {
+                // مهام افتراضية لو مفيش حاجة محفوظة
+                tasks = [
+                    { title: "مذاكرة 3 ساعات", done: false },
+                    { title: "شرب 2 لتر مياه", done: true }
+                ];
+                renderTasks();
+            }
+        };
+
+        // دالة إضافة مهمة جديدة
+        function addTask() {
+            const taskTitle = prompt("اكتب المهمة الجديدة:");
+            if (taskTitle && taskTitle.trim() !== "") {
+                tasks.push({ title: taskTitle, done: false });
+                saveAndRender();
+            }
+        }
+
+        // دالة حذف مهمة
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveAndRender();
+        }
+
+        // دالة تغيير حالة المهمة (تم / لم يتم)
+        function toggleTask(index) {
+            tasks[index].done = !tasks[index].done;
+            saveAndRender();
+        }
+
+        // دالة عرض المهام على الشاشة
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = ""; // تنظيف القائمة
+
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
                 
-                // البيانات
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildRetroField("Full Name", "Mello User", themeColor),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(child: _buildRetroField("Grade", "111", themeColor)),
-                          const SizedBox(width: 6),
-                          Expanded(child: _buildRetroField("Birthday", "July 19", themeColor)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+                li.innerHTML = `
+                    <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
+                    <span class="task-text ${task.done ? 'done' : ''}">${task.title}</span>
+                    <button class="delete-btn" onclick="deleteTask(${index})">✕</button>
+                `;
+                
+                taskList.appendChild(li);
+            });
+        }
 
-  // دواير الألوان الصغيرة في شريط العنوان
-  Widget _buildWindowButton(Color color) {
-    return Container(
-      margin: const EdgeInsets.only(left: 4),
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black12),
-      ),
-    );
-  }
+        // دالة حفظ المهام وإعادة العرض
+        function saveAndRender() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
 
-  // حقول البيانات بشكل قديم
-  Widget _buildRetroField(String label, String value, Color bgColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 10, color: Colors.black54)),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          decoration: BoxDecoration(
-            color: bgColor.withOpacity(0.2), // خلفية الحقل بتتغير حسب اللون
-            border: Border.all(color: Colors.black12),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            value, 
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)
-          ),
-        ),
-      ],
-    );
-  }
-}
+        // دالة تغيير اللون
+        function changeColor(color) {
+            // تغيير لون صورة البروفايل
+            document.getElementById('avatar-box').style.background = color;
+            
+            // تغيير لون خلفية الحقول
+            document.querySelectorAll('.field input').forEach(input => {
+                input.style.background = color + '40'; // إضافة شفافية
+            });
+
+            // تغيير لون زر الإضافة
+            document.querySelector('.add-btn').style.background = color;
+
+            // حفظ اللون في ذاكرة المتصفح
+            localStorage.setItem('themeColor', color);
+        }
+    </script>
+
+</body>
+</html>
